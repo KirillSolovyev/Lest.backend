@@ -23,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.phone_number
+        return str(self.phone_number)
 
 
 class Producer(models.Model):
@@ -68,7 +68,6 @@ class Store(models.Model):
 
 
 class StoreItem(models.Model):
-    amount = models.PositiveIntegerField()
     price = models.FloatField()
     product = models.ForeignKey(Product, related_name="store_items", on_delete=models.PROTECT)
     store = models.ForeignKey(Store, related_name="store_items", on_delete=models.CASCADE)
@@ -84,19 +83,24 @@ class StoreItem(models.Model):
 
 class Transaction(models.Model):
     user = models.ForeignKey(User, related_name="transactions", on_delete=models.PROTECT)
+    vendor = models.ForeignKey(Store, related_name="+", on_delete=models.SET(-1))
+    vendor_name = models.CharField(max_length=150, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    transaction_amount = models.DecimalField(max_digits=9, decimal_places=6, default=0)
-    vendor_name = models.CharField(max_length=150)
+    transaction_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0)
 
     def __str__(self):
-        return self.vendor_name + " " + self.transaction_amount + " " + self.date
+        return self.vendor_name + " " + str(self.transaction_amount) + " " + self.get_formatted_date('%d.%m.%y %H:%M:%S')
+
+    def get_formatted_date(self, format_str):
+        return self.date.strftime(format_str)
 
 
 class TransactionItem(models.Model):
-    product_name = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=9, decimal_places=6, default=0)
-    amount = models.PositiveIntegerField()
     transaction = models.ForeignKey(Transaction, related_name="transaction_items", on_delete=models.CASCADE)
+    store_item = models.ForeignKey(StoreItem, related_name="+", on_delete=models.SET(-1))
+    store_item_name = models.CharField(max_length=100, blank=True)
+    price = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    amount = models.PositiveIntegerField()
 
     def __str__(self):
-        return self.product_name + " " + self.amount + " " + self.price
+        return self.store_item_name + ": " + str(self.amount) + " x " + str(self.price) + "$"

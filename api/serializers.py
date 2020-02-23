@@ -1,7 +1,7 @@
 import base64, uuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from .models import Product, Producer, StoreChain, StoreItem, Store
+from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem
 
 
 class ProducerSerializer(serializers.ModelSerializer):
@@ -63,4 +63,22 @@ class StoreItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StoreItem
-        fields = ["id", "amount", "price", "product", "product_id", "store", "store_id"]
+        fields = ["id", "price", "product", "product_id", "store", "store_id"]
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(read_only=True, source="user.id")
+    vendor_id = serializers.IntegerField(read_only=True, source="vendor.id")
+
+    class Meta:
+        model = Transaction
+        fields = ["id", "transaction_amount", "vendor_id", "vendor_name", "user_id"]
+
+
+class TransactionItemSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(read_only=True, source="translation.id")
+    store_item_id = serializers.IntegerField(read_only=True, source="store_item.id")
+
+    class Meta:
+        model = TransactionItem
+        fields = ["id", "transaction_id", "store_item_id", "store_item_name", "amount", "price"]

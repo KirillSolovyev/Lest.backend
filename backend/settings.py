@@ -58,6 +58,8 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:4200"
 ]
 
+REST_FRAMEWORK = {}
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [

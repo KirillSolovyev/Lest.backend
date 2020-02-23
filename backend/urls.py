@@ -15,10 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from rest_framework.authtoken.views import obtain_auth_token
 from django.conf.urls.static import static
 from . import settings
-from api.views import product_views, producer_views, storechain_views, store_views, store_item_views
+from api.views import product_views, producer_views, storechain_views, store_views, store_item_views, transaction_views, auth_views
 
 paths = {
     "ProducerListView": producer_views.ProducerListView.as_view({'post': 'list', 'put': 'create'}),
@@ -45,5 +44,6 @@ urlpatterns = [
     path('stores/<int:pk>/', paths["StoreView"], name='store'),
     path('store/items/', paths["StoreItemListView"], name='store_item_list'),
     path('store/items/<int:pk>/', paths["StoreItemView"], name='store_item'),
-    path('api-token-auth/', obtain_auth_token, name='api_token_auth')
+    path('transactions/proceed/', transaction_views.ProceedTransactionView.as_view(), name='proceed_transaction'),
+    path('login/', auth_views.AuthView.as_view(), name='login')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
