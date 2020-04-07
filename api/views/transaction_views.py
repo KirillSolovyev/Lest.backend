@@ -1,7 +1,8 @@
+from datetime import datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -12,11 +13,11 @@ from django.contrib.auth import get_user_model
 
 
 class ProceedTransactionView(APIView):
-    # authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def put(self, request):
-        # print(request.user) #if token is passed, user is
+        print(request.user.is_authenticated) #if token is passed, user is in request
         user = request.user
         if user is None:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -34,7 +35,7 @@ class ProceedTransactionView(APIView):
                 "amount": item["amount"]
             })
 
-        #TODO: Perform transaction and handle response
+        #TODO: Perform transaction and handle the response
 
         return self.transaction_success(transaction, trans_items, user, vendor)
 
@@ -55,9 +56,21 @@ class ProceedTransactionView(APIView):
         pass
 
 
-class TransactionListView(ModelViewSet):
+class TransactionListView(ReadOnlyModelViewSet):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = serializers.TransactionSerializer
 
     def get_queryset(self):
-        amount = self.request.date.get("amount", 10)
+        to_filter = {
+            "user": self.request.user
+        }
+        amount = self.request.data.get("amount", 10)
         offset = self.request.data.get("offset", 0)
+        from_date = self.request.data.get("from_data")
+        to_date = self.request.data.get("to_date")
+        if to_date is not None:
+            to_filter["date__lte"] = datetime.strptime(to_date, "%d.%m.%Y")
+        elif from_date is not None:
+            to_filter["date__gte"] = datetime.strptime(from_date, "%d.%m.%Y")
+        return Transaction.objects.filter(**to_filter)[offset:offset+amount]

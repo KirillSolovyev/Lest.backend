@@ -1,7 +1,7 @@
 import base64, uuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem
+from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem, User
 
 
 class ProducerSerializer(serializers.ModelSerializer):
@@ -82,3 +82,12 @@ class TransactionItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionItem
         fields = ["id", "transaction_id", "store_item_id", "store_item_name", "amount", "price"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "phone_number"]
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }

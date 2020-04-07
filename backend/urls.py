@@ -29,7 +29,8 @@ paths = {
     "StoreListView": store_views.StoreListView.as_view({'post': 'list', 'put': 'create'}),
     "StoreView": store_views.StoreView.as_view({'get': 'retrieve', 'put': 'partial_update', 'delete': 'destroy'}),
     "StoreItemListView": store_item_views.StoreItemListView.as_view({'post': 'list', 'put': 'create'}),
-    "StoreItemView": store_item_views.StoreItemView.as_view({'get': 'retrieve', 'put': 'partial_update', 'delete': 'destroy'})
+    "StoreItemView": store_item_views.StoreItemView.as_view({'get': 'retrieve', 'put': 'partial_update', 'delete': 'destroy'}),
+    "UserTransactionListView": transaction_views.TransactionListView.as_view({'post': 'list'})
 }
 
 urlpatterns = [
@@ -45,5 +46,8 @@ urlpatterns = [
     path('store/items/', paths["StoreItemListView"], name='store_item_list'),
     path('store/items/<int:pk>/', paths["StoreItemView"], name='store_item'),
     path('transactions/proceed/', transaction_views.ProceedTransactionView.as_view(), name='proceed_transaction'),
-    path('login/', auth_views.AuthView.as_view(), name='login')
+    path('transactions/', paths["UserTransactionListView"], name="user_transactions"),
+    path('login/', auth_views.AuthView.as_view(), name='login'),
+    path('registration/', auth_views.RegistrationView.as_view(), name="registration"),
+    path('validate/phone/', auth_views.ValidatePhoneOTPView.as_view(), name="validate_phone")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

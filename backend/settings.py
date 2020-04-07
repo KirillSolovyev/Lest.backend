@@ -25,7 +25,11 @@ SECRET_KEY = 'm4vs4b8390*md2bw+bpnfry3!m)dq9vjfs3vk1cn8tj$@e(3x_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "10.0.2.2",
+    "localhost",
+    "192.168.0.101"
+]
 
 
 # Application definition
@@ -55,10 +59,27 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:4200"
+    "http://localhost:4200",
+    "http://10.0.2.2:8000",
+    "http://192.168.0.101:8000"
 ]
 
-REST_FRAMEWORK = {}
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/hour',
+        'user': '10000/day',
+        'registration': '60/hour',
+        'authorization': '60/hour',
+        'send_otp_min': '1/minute',
+        'send_otp_max': '5/day',
+        'confirm_otp': '25/day'
+    },
+}
 
 ROOT_URLCONF = 'backend.urls'
 

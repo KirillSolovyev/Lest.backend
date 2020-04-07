@@ -14,11 +14,11 @@ class StoreItemListView(ModelViewSet):
         product_id = self.request.data.get("product_id", None)
         barcode = self.request.data.get("barcode", None)
         to_filter = {}
-        if store_id:
+        if store_id is not None:
             to_filter["store__id"] = store_id
-        if product_id:
+        if product_id is not None:
             to_filter["product__id"] = product_id
-        if barcode:
+        if barcode is not None:
             to_filter["product__barcode"] = barcode
         return StoreItem.objects.filter(**to_filter)[offset:amount + offset]
 
@@ -35,14 +35,14 @@ class StoreItemView(ModelViewSet):
     def perform_update(self, serializer):
         product_id = self.request.data.get("product_id", None)
         store_id = self.request.data.get("store_id", None)
-        if product_id and store_id:
+        if product_id is not None and store_id is not None:
             product = get_object_or_404(Product, pk=product_id)
             store = get_object_or_404(Store, pk=store_id)
             return serializer.save(product=product, store=store)
-        elif store_id:
+        elif store_id is not None:
             store = get_object_or_404(Store, pk=store_id)
             return serializer.save(store=store)
-        elif product_id:
+        elif product_id is not None:
             product = get_object_or_404(Product, pk=product_id)
             return serializer.save(product=product)
         else:
