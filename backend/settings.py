@@ -57,6 +57,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+DEFAULT_RENDERER_CLASSES = (
+    'rest_framework.renderers.JSONRenderer',
+)
+
+if DEBUG:
+    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+
 REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
@@ -72,8 +81,10 @@ REST_FRAMEWORK = {
         'send_otp_max': '50000/day',
         'confirm_otp': '25/day'
     },
-    'DEFAULT_RENDERER_CLASSES': config('DEFAULT_RENDERER_CLASSES', default='rest_framework.renderers.JSONRenderer', cast=Csv()),
-    # 'DEFAULT_PERMISSION_CLASSES': config('DEFAULT_PERMISSION_CLASSES', default='', cast=Csv())
+    'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
+        # 'DEFAULT_PERMISSION_CLASSES': (
+        #     'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        # )
 }
 
 ROOT_URLCONF = 'backend.urls'
