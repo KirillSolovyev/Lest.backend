@@ -31,12 +31,6 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
 CORS_ORIGIN_WHITELIST = config("CORS_ORIGIN_WHITELIST", cast=Csv())
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL')
-    )
-}
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -78,6 +72,8 @@ REST_FRAMEWORK = {
         'send_otp_max': '50000/day',
         'confirm_otp': '25/day'
     },
+    'DEFAULT_RENDERER_CLASSES': config('DEFAULT_RENDERER_CLASSES', default='rest_framework.renderers.JSONRenderer', cast=Csv()),
+    # 'DEFAULT_PERMISSION_CLASSES': config('DEFAULT_PERMISSION_CLASSES', default='', cast=Csv())
 }
 
 ROOT_URLCONF = 'backend.urls'
@@ -153,4 +149,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = 'backend/static/'
+STATIC_ROOT = '/static/'
