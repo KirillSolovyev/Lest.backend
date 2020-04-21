@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "10.0.2.2",
     "localhost",
-    "192.168.0.101"
+    "192.168.0.102"
 ]
 
 
@@ -61,7 +61,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:4200",
     "http://10.0.2.2:8000",
-    "http://192.168.0.101:8000"
+    "http://192.168.0.102:8000"
 ]
 
 REST_FRAMEWORK = {
@@ -71,12 +71,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.ScopedRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/hour',
+        'anon': '6000/hour',
         'user': '10000/day',
-        'registration': '60/hour',
+        'registration': '600/hour',
         'authorization': '60/hour',
-        'send_otp_min': '1/minute',
-        'send_otp_max': '5/day',
+        'send_otp_min': '100/minute',
+        'send_otp_max': '50000/day',
         'confirm_otp': '25/day'
     },
 }

@@ -56,14 +56,13 @@ class StoreSerializer(serializers.ModelSerializer):
 
 
 class StoreItemSerializer(serializers.ModelSerializer):
-    product = serializers.CharField(read_only=True, source="product.name")
-    product_id = serializers.IntegerField(read_only=True, source="product.id")
+    product = ProductSerializer()
     store = serializers.CharField(read_only=True, source="store.name")
     store_id = serializers.IntegerField(read_only=True, source="store.id")
 
     class Meta:
         model = StoreItem
-        fields = ["id", "price", "product", "product_id", "store", "store_id"]
+        fields = ["id", "price", "product", "store", "store_id"]
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -91,3 +90,6 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
         }
+
+    def create(self, validated_data):
+        return User.objects.create_user(validated_data.get("phone_number"), validated_data.get("password"))

@@ -9,3 +9,4 @@ class ErrorCode(Enum):
     PHONE_ALREADY_VERIFIED = "phone_already_verified"
     PHONE_HAS_NO_VERIFY_REQUEST = "phone_has_no_verify_request"
     USER_ALREADY_EXIST = "user_already_exist"
+    USER_NOT_REGISTERED = "user_not_registered"

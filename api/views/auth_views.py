@@ -23,6 +23,11 @@ class AuthView(APIView):
 
         if phone_number is None or password is None:
             return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(phone_number=phone_number)
+        if not user.exists():
+            return Response({"error": ErrorCode.USER_NOT_REGISTERED.value}, status=status.HTTP_400_BAD_REQUEST)
+
         user = authenticate(phone_number=phone_number, password=password)
         if not user:
             return Response({"error": ErrorCode.INVALID_CREDENTIALS.value}, status=status.HTTP_403_FORBIDDEN)
@@ -46,8 +51,9 @@ class RegistrationView(APIView):
 
         serialized = UserSerializer(data=request.data)
         if serialized.is_valid():
-            serialized.save()
-            return Response(serialized.data, status=status.HTTP_201_CREATED)
+            user = serialized.save()
+            token = get_object_or_404(Token, user=user)
+            return Response({"token": token.key}, status=status.HTTP_201_CREATED)
         else:
             return Response({"error": ErrorCode.INVALID_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -88,6 +94,7 @@ class ValidatePhoneOTPView(APIView):
                     phone_otp = phone_otp.first()
                     phone_otp.key = key
                     phone_otp.save()
+                    print(otp.now())
                     return Response({"opt": otp.now()}, status=status.HTTP_200_OK)
                 else:
                     phone_otp = PhoneOTP(phone_number=phone, key=key)
@@ -97,6 +104,7 @@ class ValidatePhoneOTPView(APIView):
                         return Response({"error": ErrorCode.INVALID_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
                     else:
                         phone_otp.save()
+                        print(otp.now())
                         return Response({"otp": otp.now()}, status=status.HTTP_201_CREATED)
         else:
             return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
