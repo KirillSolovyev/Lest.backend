@@ -4,6 +4,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
 
 from .managers import UserManager
+from .common.roles import Role
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -13,8 +14,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=100, blank=True)
     age = models.PositiveIntegerField(null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    role = models.IntegerField(default=Role.USER.value)
     is_verified = models.BooleanField(default=False)
 
     objects = UserManager()
@@ -38,17 +38,25 @@ class PhoneOTP(models.Model):
 
 
 class Producer(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class ProductCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=50)
-    composition = models.CharField(max_length=255)
-    producer = models.ForeignKey(Producer, related_name="products", on_delete=models.DO_NOTHING)
+    name = models.CharField(max_length=100)
+    composition = models.CharField(max_length=255, blank=True)
+    producer = models.ForeignKey(Producer, related_name="products", on_delete=models.PROTECT)
     barcode = models.BigIntegerField()
+    category = models.ForeignKey(ProductCategory, related_name="products", on_delete=models.PROTECT)
     image = models.ImageField(upload_to="images/products", blank=True)
 
     def __str__(self):
@@ -61,7 +69,7 @@ class Product(models.Model):
 
 
 class StoreChain(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name

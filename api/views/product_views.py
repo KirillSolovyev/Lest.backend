@@ -1,8 +1,9 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
-from api import serializers
-from api.models import Product, Producer
+from .. import serializers
+from ..models import Product, Producer
+from ..common import permissions
 from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 
 
@@ -22,6 +23,11 @@ class ProductListView(ModelViewSet):
     def perform_create(self, serializer):
         producer = get_object_or_404(Producer, pk=self.request.data.get("producer_id"))
         return serializer.save(producer=producer)
+
+    def get_permissions(self):
+        if self.action == "create":
+            self.permission_classes = (permissions.IsAdmin, permissions.IsPartnerWorker, permissions.IsPartner)
+        return super(self.__class__, self).get_permissions()
 
 
 class ProductView(ModelViewSet):
@@ -48,3 +54,8 @@ class ProductView(ModelViewSet):
     def perform_destroy(self, instance):
         instance.image.delete()
         instance.delete()
+
+    def get_permissions(self):
+        if self.action in ("update", "destroy"):
+            self.permission_classes = (permissions.IsAdmin,)
+        return super(self.__class__, self).get_permissions()

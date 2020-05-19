@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
-from api import serializers
-from api.models import Store, StoreChain
+from .. import serializers
+from ..models import Store, StoreChain
+from ..common import permissions
 
 
 class StoreListView(ModelViewSet):
@@ -20,6 +21,11 @@ class StoreListView(ModelViewSet):
         store_chain = get_object_or_404(StoreChain, pk=self.request.data.get("store_chain_id"))
         return serializer.save(store_chain=store_chain)
 
+    def get_permissions(self):
+        if self.action == "create":
+            self.permission_classes = (permissions.IsAdmin,)
+        return super(self.__class__, self).get_permissions()
+
 
 class StoreView(ModelViewSet):
     serializer_class = serializers.StoreSerializer
@@ -32,3 +38,8 @@ class StoreView(ModelViewSet):
             return serializer.save(store_chain = store_chain)
         else:
             return serializer.save()
+
+    def get_permissions(self):
+        if self.action in ("update", "destroy"):
+            self.permission_classes = (permissions.IsAdmin,)
+        return super(self.__class__, self).get_permissions()

@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, password_validation
 from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -26,14 +26,14 @@ class AuthView(APIView):
 
         user = User.objects.filter(phone_number=phone_number)
         if not user.exists():
-            return Response({"error": ErrorCode.USER_NOT_REGISTERED.value}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(phone_number=phone_number, password=password)
         if not user:
             return Response({"error": ErrorCode.INVALID_CREDENTIALS.value}, status=status.HTTP_403_FORBIDDEN)
 
         token = get_object_or_404(Token, user=user)
-        return Response({"token": token.key}, status=status.HTTP_200_OK)
+        return Response({"user": UserSerializer(user).data, "token": token.key}, status=status.HTTP_200_OK)
 
 
 class RegistrationView(APIView):
@@ -41,7 +41,12 @@ class RegistrationView(APIView):
 
     def put(self, request):
         phone = request.data.get("phone_number", False)
+        password = request.data.get("password", False)
         phone_otp = PhoneOTP.objects.filter(phone_number__iexact=phone)
+
+        if not phone or not password:
+            return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
         if not phone_otp.exists() or not phone_otp.first().verified:
             return Response({"error": ErrorCode.PHONE_HAS_NO_VERIFY_REQUEST.value}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -49,13 +54,15 @@ class RegistrationView(APIView):
         if user.exists():
             return Response({"error": ErrorCode.USER_ALREADY_EXIST.value}, status=status.HTTP_400_BAD_REQUEST)
 
-        serialized = UserSerializer(data=request.data)
-        if serialized.is_valid():
-            user = serialized.save()
-            token = get_object_or_404(Token, user=user)
-            return Response({"token": token.key}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"error": ErrorCode.INVALID_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            password_validation.validate_password(password)
+        except:
+            return Response({"error": ErrorCode.WEAK_PASSWORD.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create_user(phone, password)
+        serialized = UserSerializer(user)
+        token = get_object_or_404(Token, user=user)
+        return Response({"user": serialized.data, "token": token.key}, status=status.HTTP_201_CREATED)
 
 
 class SendOTPThrottleMin(UserRateThrottle):
@@ -134,3 +141,35 @@ class ValidatePhoneOTPView(APIView):
             return Response({}, status=status.HTTP_200_OK)
         else:
             return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AccountSettingsView(APIView):
+    def post(self, request):
+        phone = request.data.get("phone_number", False)
+        old_password = request.data.get("password", False)
+        new_password = request.data.get("new_password", False)
+        if not phone or not old_password or not new_password:
+            return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            password_validation.validate_password(new_password)
+        except:
+            return Response({"error": ErrorCode.WEAK_PASSWORD.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(phone_number=phone)
+        if not user.exists():
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_auth = authenticate(phone_number=phone, password=old_password)
+        if not is_auth:
+            return Response({"error": ErrorCode.INVALID_CREDENTIALS.value}, status=status.HTTP_403_FORBIDDEN)
+
+        is_auth = authenticate(phone_number=phone, password=new_password)
+        if is_auth:
+            return Response({"error": ErrorCode.NEW_PASSWORD_SAME_AS_OLD.value}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        user = user.first()
+        user.set_password(new_password)
+        user.save()
+        return Response({"status": True})

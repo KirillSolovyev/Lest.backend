@@ -1,7 +1,7 @@
 import base64, uuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem, User
+from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem, User, ProductCategory
 
 
 class ProducerSerializer(serializers.ModelSerializer):
@@ -20,9 +20,16 @@ class Base64ImageField(serializers.ImageField):
         return super(Base64ImageField, self).to_internal_value(data)
 
 
+class ProductCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCategory
+        fields = "__all__"
+
+
 class ProductSerializer(serializers.ModelSerializer):
     producer = serializers.CharField(read_only=True, source="producer.name")
     producer_id = serializers.IntegerField(read_only=True, source="producer.id")
+    category_id = serializers.IntegerField(read_only=True, source="category.id")
     image = Base64ImageField()
 
     def validate_name(self, value):
@@ -32,7 +39,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "barcode", "name", "composition", "image", "producer", "producer_id"]
+        fields = ["id", "barcode", "name", "composition", "image", "producer", "producer_id", "category_id"]
 
 
 class StoreChainSerializer(serializers.ModelSerializer):
@@ -86,7 +93,7 @@ class TransactionItemSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "phone_number"]
+        fields = ["id", "phone_number", "name"]
         extra_kwargs = {
             'password': {'write_only': True},
         }

@@ -1,3 +1,4 @@
+from .common.roles import Role
 from django.contrib.auth.base_user import BaseUserManager
 from rest_framework.authtoken.models import Token
 
@@ -9,8 +10,8 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', False)
         if not phone_number:
             raise ValueError("The phone number must be set")
+
         user = self.model(phone_number=phone_number, **extra_fields)
-        print(password)
         user.set_password(password)
         user.save(using=self._db)
         Token.objects.create(user=user)
@@ -21,7 +22,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, phone_number, password, **extra_fields):
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("role", Role.ADMIN)
 
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
