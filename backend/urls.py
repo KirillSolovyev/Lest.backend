@@ -60,5 +60,6 @@ urlpatterns = [
     path('login/', auth_views.AuthView.as_view(), name='login'),
     path('registration/', auth_views.RegistrationView.as_view(), name="registration"),
     path('validate/phone/', auth_views.ValidatePhoneOTPView.as_view(), name="validate_phone"),
-    path('account/settings/', auth_views.AccountSettingsView.as_view(), name="account_settings"),
+    path('account/password/', auth_views.PasswordSettingsView.as_view(), name="password_settings"),
+    path('account/password/reset', auth_views.ResetPasswordView.as_view(), name="password_reset")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

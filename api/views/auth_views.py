@@ -11,6 +11,16 @@ from ..serializers import UserSerializer
 from ..common.errors import ErrorCode
 import pyotp
 
+OTP_INTERVAL = 120
+
+
+def refresh_token(user):
+    token, _ = Token.objects.get_or_create(user=user)
+    token.delete()
+    token = Token.objects.create(user=user)
+    token.save()
+    return token
+
 
 class AuthView(APIView):
     throttle_scope = "authorization"
@@ -34,6 +44,11 @@ class AuthView(APIView):
 
         token = get_object_or_404(Token, user=user)
         return Response({"user": UserSerializer(user).data, "token": token.key}, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        refresh_token(user)
+        return Response({"status": "success"})
 
 
 class RegistrationView(APIView):
@@ -96,7 +111,7 @@ class ValidatePhoneOTPView(APIView):
             else:
                 key = pyotp.random_base32()
                 phone_otp = PhoneOTP.objects.filter(phone_number__iexact=phone)
-                otp = pyotp.TOTP(key, interval=60)
+                otp = pyotp.TOTP(key, interval=OTP_INTERVAL)
                 if phone_otp.exists():
                     phone_otp = phone_otp.first()
                     phone_otp.key = key
@@ -132,18 +147,18 @@ class ValidatePhoneOTPView(APIView):
             if phone_otp.verified:
                 return Response({"error": ErrorCode.PHONE_ALREADY_VERIFIED.value}, status=status.HTTP_400_BAD_REQUEST)
 
-            totp = pyotp.TOTP(phone_otp.key, interval=60)
+            totp = pyotp.TOTP(phone_otp.key, interval=OTP_INTERVAL)
             if not totp.verify(otp):
                 return Response({"error": ErrorCode.INVALID_OTP.value}, status=status.HTTP_400_BAD_REQUEST)
 
             phone_otp.verified = True
             phone_otp.save()
-            return Response({}, status=status.HTTP_200_OK)
+            return Response({"status": "success"})
         else:
             return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AccountSettingsView(APIView):
+class PasswordSettingsView(APIView):
     def post(self, request):
         phone = request.data.get("phone_number", False)
         old_password = request.data.get("password", False)
@@ -168,8 +183,86 @@ class AccountSettingsView(APIView):
         if is_auth:
             return Response({"error": ErrorCode.NEW_PASSWORD_SAME_AS_OLD.value}, status=status.HTTP_400_BAD_REQUEST)
 
-
         user = user.first()
         user.set_password(new_password)
         user.save()
+        token = refresh_token(user)
+        return Response({"token": token.key})
+
+    def put(self, request):
+        phone_number = request.data.get("phone_number", False)
+        password = request.data.get("password", False)
+        if not phone_number or not password:
+            return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = PhoneOTP.objects.filter(phone_number__iexact=phone_number)
+        if not phone.exists():
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = phone.first()
+        if not phone.reset_pass:
+            return Response({"error": ErrorCode.PHONE_HAS_NO_PASS_RESET_REQUEST.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(phone_number=phone_number)
+        if not user.exists():
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            password_validation.validate_password(password)
+        except:
+            return Response({"error": ErrorCode.WEAK_PASSWORD.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_auth = authenticate(phone_number=phone_number, password=password)
+        if is_auth:
+            return Response({"error": ErrorCode.NEW_PASSWORD_SAME_AS_OLD.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone.reset_pass = False
+        phone.save()
+        user = user.first()
+        user.set_password(password)
+        user.save()
+        token = refresh_token(user)
+        return Response({"token": token.key})
+
+
+class ResetPasswordView(APIView):
+    def put(self, request):
+        phone_number = request.data.get("phone_number", False)
+        if not phone_number:
+            return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = PhoneOTP.objects.filter(phone_number__iexact=phone_number)
+        if not phone.exists():
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = phone.first()
+        key = pyotp.random_base32()
+        otp = pyotp.TOTP(key, interval=OTP_INTERVAL)
+        phone.key = key
+        phone.save()
+        print(otp.now())
+        return Response({"otp": otp.now()})
+
+    def post(self, request):
+        phone_number = request.data.get("phone_number", False)
+        otp = request.data.get("otp", False)
+        if not phone_number or not otp:
+            return Response({"error": ErrorCode.INCOMPLETE_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            otp = int(otp)
+        except:
+            return Response({"error": ErrorCode.INVALID_DATA.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = PhoneOTP.objects.filter(phone_number__iexact=phone_number)
+        if not phone.exists():
+            return Response({"error": ErrorCode.NO_SUCH_USER.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = phone.first()
+        totp = pyotp.TOTP(phone.key, interval=OTP_INTERVAL)
+        if not totp.verify(otp):
+            return Response({"error": ErrorCode.INVALID_OTP.value}, status=status.HTTP_400_BAD_REQUEST)
+
+        phone.reset_pass = True
+        phone.save()
         return Response({"status": True})

@@ -16,6 +16,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.IntegerField(default=Role.USER.value)
     is_verified = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -32,6 +33,7 @@ class PhoneOTP(models.Model):
     phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True)
     key = models.CharField(max_length=100, unique=True, blank=True)
     verified = models.BooleanField(default=False)
+    reset_pass = models.BooleanField(default=False)
 
     def __str__(self):
         return self.phone_number + " otp: " + self.key

@@ -8,6 +8,7 @@ class ErrorCode(Enum):
     INVALID_CREDENTIALS = "invalid_credentials"
     PHONE_ALREADY_VERIFIED = "phone_already_verified"
     PHONE_HAS_NO_VERIFY_REQUEST = "phone_has_no_verify_request"
+    PHONE_HAS_NO_PASS_RESET_REQUEST = "phone_has_no_pass_reset_request"
     USER_ALREADY_EXIST = "user_already_exist"
     NO_SUCH_USER = "no_such_user"
     NOT_LOGGED_IN = "user_not_logged_in"
