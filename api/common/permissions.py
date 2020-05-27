@@ -15,3 +15,8 @@ class IsPartner(BasePermission):
 class IsPartnerWorker(BasePermission):
     def has_permission(self, request, view):
         return request.user and not request.user.is_anonymous and request.user.role == Role.PARTNER_WORKER.value
+
+
+class IsStoreChain(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and not request.user.is_anonymous and request.user.role == Role.STORE_CHAIN.value

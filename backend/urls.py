@@ -17,9 +17,8 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
 from . import settings
-from api.views import \
-    product_views, producer_views, storechain_views, store_views, store_item_views, transaction_views, auth_views, \
-    product_category_views
+from api.views import product_views, producer_views, storechain_views, store_views, store_item_views, \
+                      transaction_views, auth_views, product_category_views, promo_views, discount_views
 
 paths = {
     "ProducerListView": producer_views.ProducerListView.as_view({'post': 'list', 'put': 'create'}),
@@ -37,6 +36,10 @@ paths = {
     "TransactionListView": transaction_views.TransactionListView.as_view({'post': 'list'}),
     "TransactionView": transaction_views.TransactionView.as_view({"get": "retrieve"}),
     "TransactionItemListView": transaction_views.TransactionItemListView.as_view({"post": "list"}),
+    "PromoListView": promo_views.PromoListView.as_view({"post": "list", "put": "create"}),
+    "PromoView": promo_views.PromoView.as_view({"get": "retrieve", "put": "partial_update", "delete": "destroy"}),
+    "DiscountListView": discount_views.DiscountListView.as_view({"post": "list", "put": "create"}),
+    "DiscountView": discount_views.DiscountView.as_view({"get": "retrieve", "put": "partial_update", "delete": "destroy"})
 }
 
 urlpatterns = [
@@ -61,5 +64,9 @@ urlpatterns = [
     path('registration/', auth_views.RegistrationView.as_view(), name="registration"),
     path('validate/phone/', auth_views.ValidatePhoneOTPView.as_view(), name="validate_phone"),
     path('account/password/', auth_views.PasswordSettingsView.as_view(), name="password_settings"),
-    path('account/password/reset', auth_views.ResetPasswordView.as_view(), name="password_reset")
+    path('account/password/reset', auth_views.ResetPasswordView.as_view(), name="password_reset"),
+    path('promo/', paths["PromoListView"], name="promo_list"),
+    path('promo/<int:pk>/', paths["PromoView"], name="promo_item"),
+    path('discounts/', paths["DiscountListView"], name="discount_list"),
+    path('discounts/<int:pk>/', paths["DiscountView"], name="discount_item")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

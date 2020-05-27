@@ -1,7 +1,9 @@
 import base64, uuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from .models import Product, Producer, StoreChain, StoreItem, Store, Transaction, TransactionItem, User, ProductCategory
+from .models import Product, Producer, StoreChain, StoreItem, Store, \
+                    Transaction, TransactionItem, User, ProductCategory, \
+                    Promo, Discount
 
 
 class ProducerSerializer(serializers.ModelSerializer):
@@ -66,6 +68,7 @@ class StoreItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
     store = serializers.CharField(read_only=True, source="store.name")
     store_id = serializers.IntegerField(read_only=True, source="store.id")
+    discount = serializers.FloatField(read_only=True, source="discount.old_price")
 
     class Meta:
         model = StoreItem
@@ -100,3 +103,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(validated_data.get("phone_number"), validated_data.get("password"))
+
+
+class PromoSerializer(serializers.ModelSerializer):
+    store_chain = StoreChainSerializer(read_only=True)
+
+    class Meta:
+        model = Promo
+        fields = ("id", "text", "store_chain")
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    price = serializers.FloatField(read_only=True, source="store_item.price")
+    store_chain = StoreChainSerializer(read_only=True, source="store_item.store.store_chain")
+    product = ProductSerializer(read_only=True, source="store_item.product")
+
+    class Meta:
+        model = Discount
+        fields = ("id", "old_price", "price", "store_chain", "product")

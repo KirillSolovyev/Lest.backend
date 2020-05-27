@@ -6,3 +6,4 @@ class Role(Enum):
     USER = 2
     PARTNER = 3
     PARTNER_WORKER = 4
+    STORE_CHAIN = 5

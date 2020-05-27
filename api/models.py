@@ -72,6 +72,7 @@ class Product(models.Model):
 
 class StoreChain(models.Model):
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="images/store_chains", blank=True)
 
     def __str__(self):
         return self.name
@@ -100,6 +101,22 @@ class StoreItem(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['product', 'store'], name="one_product_per_store")
         ]
+
+
+class Promo(models.Model):
+    store_chain = models.ForeignKey(StoreChain, related_name="promos", on_delete=models.PROTECT)
+    text = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.store_chain.name + ": " + self.text
+
+
+class Discount(models.Model):
+    store_item = models.OneToOneField(StoreItem, related_name="discount", on_delete=models.PROTECT)
+    old_price = models.FloatField()
+
+    def __str__(self):
+        return self.store_item.__str__() + " old price:" + str(self.old_price)
 
 
 class Transaction(models.Model):

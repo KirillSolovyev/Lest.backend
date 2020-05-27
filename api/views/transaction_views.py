@@ -17,7 +17,6 @@ class ProceedTransactionView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def put(self, request):
-        # print(request.user.is_authenticated) #if token is passed, user is in request
         user = request.user
         if user is None:
             return Response({"error": ErrorCode.NOT_LOGGED_IN.value}, status=status.HTTP_404_NOT_FOUND)

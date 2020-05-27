@@ -1,11 +1,11 @@
 from rest_framework.viewsets import ModelViewSet
-from api import serializers
+from ..serializers import ProducerSerializer
 from ..models import Producer
 from ..common import permissions
 
 
 class ProducerListView(ModelViewSet):
-    serializer_class = serializers.ProducerSerializer
+    serializer_class = ProducerSerializer
 
     def get_queryset(self):
         amount = self.request.data.get("amount", 10)
@@ -19,7 +19,7 @@ class ProducerListView(ModelViewSet):
 
 
 class ProducerView(ModelViewSet):
-    serializer_class = serializers.ProducerSerializer
+    serializer_class = ProducerSerializer
     queryset = Producer.objects.all()
 
     def get_permissions(self):
