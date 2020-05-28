@@ -58,7 +58,7 @@ class Product(models.Model):
     composition = models.CharField(max_length=255, blank=True)
     producer = models.ForeignKey(Producer, related_name="products", on_delete=models.PROTECT)
     barcode = models.BigIntegerField()
-    category = models.ForeignKey(ProductCategory, related_name="products", on_delete=models.PROTECT)
+    # category = models.ForeignKey(ProductCategory, related_name="products", on_delete=models.PROTECT)
     image = models.ImageField(upload_to="images/products", blank=True)
 
     def __str__(self):
