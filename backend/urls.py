@@ -18,7 +18,8 @@ from django.urls import path
 from django.conf.urls.static import static
 from . import settings
 from api.views import product_views, producer_views, storechain_views, store_views, store_item_views, \
-                      transaction_views, auth_views, product_category_views, promo_views, discount_views
+                      transaction_views, auth_views, product_category_views, promo_views, discount_views, \
+                      c_export_views
 
 paths = {
     "ProducerListView": producer_views.ProducerListView.as_view({'post': 'list', 'put': 'create'}),
@@ -68,5 +69,6 @@ urlpatterns = [
     path('promo/', paths["PromoListView"], name="promo_list"),
     path('promo/<int:pk>/', paths["PromoView"], name="promo_item"),
     path('discounts/', paths["DiscountListView"], name="discount_list"),
-    path('discounts/<int:pk>/', paths["DiscountView"], name="discount_item")
+    path('discounts/<int:pk>/', paths["DiscountView"], name="discount_item"),
+    path('1c/', c_export_views.ExportCView.as_view(), name="1c_view")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
