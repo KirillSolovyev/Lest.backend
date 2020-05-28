@@ -65,14 +65,14 @@ class StoreSerializer(serializers.ModelSerializer):
 
 
 class StoreItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer()
+    product = ProductSerializer(read_only=True)
     store = serializers.CharField(read_only=True, source="store.name")
     store_id = serializers.IntegerField(read_only=True, source="store.id")
     discount = serializers.FloatField(read_only=True, source="discount.old_price")
 
     class Meta:
         model = StoreItem
-        fields = ["id", "price", "product", "store", "store_id"]
+        fields = ["id", "price", "product", "store", "store_id", "discount"]
 
 
 class TransactionSerializer(serializers.ModelSerializer):
