@@ -58,7 +58,7 @@ class Product(models.Model):
     composition = models.CharField(max_length=255, blank=True)
     producer = models.ForeignKey(Producer, related_name="products", on_delete=models.PROTECT)
     barcode = models.BigIntegerField()
-    # category = models.ForeignKey(ProductCategory, related_name="products", on_delete=models.PROTECT)
+    category = models.ForeignKey(ProductCategory, related_name="products", on_delete=models.PROTECT)
     image = models.ImageField(upload_to="images/products", blank=True)
 
     def __str__(self):
@@ -142,3 +142,21 @@ class TransactionItem(models.Model):
 
     def __str__(self):
         return self.store_item_name + ": " + str(self.amount) + " x " + str(self.price) + "$"
+
+
+class AbstractPromoCampaign(models.Model):
+    store_chain = models.ForeignKey(StoreChain, related_name="%(class)s_promo_campaign", on_delete=models.PROTECT)
+    date_start = models.DateTimeField(auto_now_add=True)
+    date_end = models.DateTimeField()
+    description = models.CharField(max_length=150)
+
+    class Meta:
+        abstract = True
+
+
+class PartnerCampaign(AbstractPromoCampaign):
+    conditions = models.CharField(max_length=100)
+
+
+class PaidCampaign(AbstractPromoCampaign):
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
