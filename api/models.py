@@ -7,6 +7,26 @@ from .managers import UserManager
 from .common.roles import Role
 
 
+class StaffUsersManager(models.Manager):
+    def get_queryset(self):
+        return super(StaffUsersManager, self).get_queryset().filter(is_staff=True)
+
+
+class VerifiedUsersManager(models.Manager):
+    def get_queryset(self):
+        return super(VerifiedUsersManager, self).get_queryset().filter(is_verified=True)
+
+
+class AdultUsersManager(models.Manager):
+    def get_queryset(self):
+        return super(AdultUsersManager, self).get_queryset().filter(age__gt=18)
+
+
+class AdminUsersManager(models.Manager):
+    def get_queryset(self):
+        return super(AdminUsersManager, self).get_queryset().filter(role=Role.ADMIN.value)
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
                                  message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
@@ -19,6 +39,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
+    staff_users = StaffUsersManager()
+    verified_users = VerifiedUsersManager()
+    adult_users = AdultUsersManager()
+    admin_users = AdminUsersManager()
 
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = []
